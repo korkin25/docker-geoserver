@@ -53,7 +53,7 @@ The preferred way (but using most bandwidth for the initial image) is to
 get our docker trusted build like this:
 
 ```shell
-VERSION=2.20.2
+VERSION=2.20.3
 docker pull kartoza/geoserver:$VERSION
 ```
 ### Building the image
@@ -96,13 +96,13 @@ To build using a specific tagged release for tomcat image set the
 to choose which tag you need to build against.
 
 ```
-ie VERSION=2.20.2
-docker build --build-arg IMAGE_VERSION=8-jre8 --build-arg GS_VERSION=2.20.2 -t kartoza/geoserver:${VERSION} .
+ie VERSION=2.20.3
+docker build --build-arg IMAGE_VERSION=8-jre8 --build-arg GS_VERSION=2.20.3 -t kartoza/geoserver:${VERSION} .
 ```
 
 For some recent builds it is necessary to set the JAVA_PATH as well (e.g. Apache Tomcat/9.0.36)
 ```
-docker build --build-arg IMAGE_VERSION=9-jdk11-openjdk-slim --build-arg JAVA_HOME=/usr/local/openjdk-11/bin/java --build-arg GS_VERSION=2.20.2 -t kartoza/geoserver:2.20.2 .
+docker build --build-arg IMAGE_VERSION=9-jdk11-openjdk-slim --build-arg JAVA_HOME=/usr/local/openjdk-11/bin/java --build-arg GS_VERSION=2.20.3 -t kartoza/geoserver:2.20.3 .
 ```
 
 **Note:** Please check the [GeoServer documentation](https://docs.geoserver.org/stable/en/user/production/index.html) to see which tomcat versions 
@@ -126,7 +126,7 @@ The image ships with the following stable plugins:
 * csw-plugin
 
 **Note:** The plugins listed above are omitted from [Stable_plugins.txt](https://github.com/kartoza/docker-geoserver/blob/master/build_data/stable_plugins.txt)
-even though they are considered [stable plugins](https://sourceforge.net/projects/geoserver/files/GeoServer/2.20.2/extensions/)
+even though they are considered [stable plugins](https://sourceforge.net/projects/geoserver/files/GeoServer/2.20.3/extensions/)
 The image activates them on startup.
 
 The image provides the necessary plugin zip files which are used when activating the
@@ -144,7 +144,7 @@ The environment variable `STABLE_EXTENSIONS` can be used to activate plugins lis
 Example
 
 ```
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -d -p 8600:8080 --name geoserver -e STABLE_EXTENSIONS=charts-plugin,db2-plugin kartoza/geoserver:${VERSION} 
 
 ```
@@ -165,7 +165,7 @@ The environment variable `COMMUNITY_EXTENSIONS` can be used to activate plugins 
 Example 
 
 ``` 
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -d -p 8600:8080 --name geoserver -e COMMUNITY_EXTENSIONS=gwc-sqlite-plugin,ogr-datastore-plugin kartoza/geoserver:${VERSION} 
 
 ```
@@ -180,7 +180,7 @@ Geoserver ships with sample data which can be used by users to familiarize them 
 This is not activated by default. You can activate it using the environment variable `SAMPLE_DATA=true` 
 
 ``` 
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -d -p 8600:8080 --name geoserver -e SAMPLE_DATA=true kartoza/geoserver:${VERSION} 
 
 ```
@@ -255,14 +255,14 @@ If you set the environment variable `SSL=true` but do not provide the pem files 
 the container will generate a self-signed SSL certificates.
 
 ```
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -it --name geoserver  -e PKCS12_PASSWORD=geoserver -e JKS_KEY_PASSWORD=geoserver -e JKS_STORE_PASSWORD=geoserver -e SSL=true -p 8443:8443 -p 8600:8080 kartoza/geoserver:${VERSION} 
 ```
 
 If you already have your perm files (fullchain.pem and privkey.pem) you can mount the directory containing your keys as:
 
 ``` 
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -it --name geo -v /etc/certs:/etc/certs  -e PKCS12_PASSWORD=geoserver -e JKS_KEY_PASSWORD=geoserver -e JKS_STORE_PASSWORD=geoserver -e SSL=true -p 8443:8443 -p 8600:8080 kartoza/geoserver:${VERSION}  
 
 ```
@@ -324,17 +324,17 @@ To include Tomcat extras including docs, examples, and the manager webapp, set t
 to use a strong password otherwise the default one is set up.
 
 ```
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -it --name geoserver  -e TOMCAT_EXTRAS=true -p 8600:8080 kartoza/geoserver:${VERSION} 
 ```
 
 **Note:** If `TOMCAT_EXTRAS` is set to false, requests to the root webapp ("/") will return HTTP status code 404. To issue a redirect to the GeoServer webapp ("/geoserver/web") set `ROOT_WEBAPP_REDIRECT=true`
 
 ### Upgrading image to use a specific version
-During initialization, the image will run a script that updates the passwords. This 
+During initialization, the image will run a script that updates the passwords. This
 is recommended to change passwords the first time that GeoServer runs. If you are migrating
 your GeoServer instance, from one a lower version to a higher one you will need to set the
-environment variable `EXISTING_DATA_DIR=true`
+environment variable `EXISTING_DATA_DIR`; unset it to run the initialization script.
 
 The environment variable will ensure that the password initialization is skipped
 during the startup procedure.
@@ -346,7 +346,7 @@ If you have downloaded extra fonts you can mount the folder to the path
 path during initialisation.
 
 ```
-ie VERSION=2.20.2
+ie VERSION=2.20.3
 docker run -v fonts:/opt/fonts -p 8080:8080 -t kartoza/geoserver:${VERSION} 
 ```
 
@@ -403,12 +403,12 @@ GEOSERVER_ADMIN_USER
 ```
 
 The username and password are reinitialized each time the container starts. If you do not pass the env variables
-`GEOSERVER_ADMIN_PASSWORD` but you need to reset the password you will need to  pass the environment variable
-`RESET_ADMIN_CREDENTIALS=TRUE`
-The default behaviour is to reinitialize the random password once when the container starts.
+`GEOSERVER_ADMIN_PASSWORD` the container will generate a new password which is visible in the 
+startup logs.
 
-**Note:** If you do not pass the env variable `GEOSERVER_ADMIN_PASSWORD` on startup the image will generate a strong password.
-The password can be accessed from the startup logs or as a text file within the Geoserver data directory
+**Note:** When upgrading the `GEOSERVER_ADMIN_PASSWORD` and `GEOSERVER_ADMIN_USER` you will 
+need to mount the volume `settings:/settings` so that the lock-files generated by the `update_password.sh` are
+persistent during initialization. See the example in [docker-compose-build](https://github.com/kartoza/docker-geoserver/blob/master/docker-compose-build.yml)
 
 ```
 docker run --name "geoserver" -e GEOSERVER_ADMIN_USER=kartoza  -e GEOSERVER_ADMIN_PASSWORD=myawesomegeoserver -p 8080:8080 -d -t kartoza/geoserver
@@ -459,6 +459,8 @@ The configs that can be mounted are
 * epsg.properties - for custom GeoServer EPSG values
 * server.xml - for tomcat configurations
 * broker.xml
+* users.xml - for Geoserver users. 
+* roles.xml - To define roles users should have in GeoServer
 
 
 Example
@@ -467,6 +469,8 @@ Example
 
 ```
 
+**Note:** The files `users.xml` and `roles.xml` should be mounted together to prevent errors
+during container start. Mounting these two files will overwrite `GEOSERVER_ADMIN_PASSWORD` and `GEOSERVER_ADMIN_USER`
 ### CORS Support
 
 The image ships with CORS support. If you however need to modify the web.xml you
