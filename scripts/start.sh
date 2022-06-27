@@ -401,4 +401,7 @@ if [[ -z "${EXISTING_DATA_DIR}" ]]; then
   /scripts/update_passwords.sh
 fi
 
+patch_gwc_s3_settings
+
 setup_logging
+

@@ -340,3 +340,51 @@ function postgres_ssl_setup() {
   fi
 
 }
+
+function patch_gwc_s3_settings() {
+	log Replacing S3 servers configuration from env/configmap/etc...
+	if [ -z "${GEOSERVER_DATA_DIR}" -o -z "${s3_id}" -o -z "${s3_default}" -o -z "${s3_enabled}"   -o -z "${s3_bucket}"  -o -z "${s3_awsAccessKey}"  -o -z "${s3_awsSecretKey}"  -o -z "${s3_access}"  -o -z "${s3_maxConnections}"  -o -z "${s3_useHTTPS}"  -o -z "${s3_useGzip}"  -o -z "${s3_endpoint}"  ]; then
+		log some vars are missing. Kept w/o changes
+		log GEOSERVER_DATA_DIR: ${GEOSERVER_DATA_DIR}
+		log s3_id: ${s3_id}
+		log s3_default: ${s3_default}
+		log s3_enabled: ${s3_enabled}
+		log s3_bucket: ${s3_bucket}
+		log s3_awsAccessKey: ${s3_awsAccessKey}
+		log s3_awsSecretKey: ${s3_awsSecretKey}
+		log s3_access: ${s3_access}
+		log s3_maxConnections: ${s3_maxConnections}
+		log s3_useHTTPS: ${s3_useHTTPS}
+		log s3_useGzip: ${s3_useGzip}
+		log s3_endpoint: ${s3_endpoint}
+		log Do nothing...
+	else
+		GWC_PATH="${GEOWEBCACHE_CACHE_DIR}/geowebcache.xml" ;
+
+		if [ -r "${GWC_PATH}" ]; then
+			log "Patching....GWC_PATH: ${GWC_PATH}"
+			cp "${GWC_PATH}" "${GWC_PATH}.orig"
+			cat "${GWC_PATH}" | xmlstarlet ed -d "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores" -t elem -n S3BlobStore -v "" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t attr -n default -v ${s3_default} |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n id -v "${s3_id}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n enabled -v "${s3_enabled}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n bucket -v "${s3_bucket}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n awsAccessKey -v "${s3_awsAccessKey}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n awsSecretKey -v "${s3_awsSecretKey}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n access -v "${s3_access}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n maxConnections -v "${s3_maxConnections}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n useHTTPS -v "${s3_useHTTPS}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n useGzip -v "${s3_useGzip}" |
+				xmlstarlet ed -s "/_:gwcConfiguration/_:blobStores/_:S3BlobStore" -t elem -n endpoint -v "${s3_endpoint}" > "${GWC_PATH}.new"
+				#log Please fill the difference:
+				#diff -ru "${GWC_PATH}.orig" "${GWC_PATH}.new"
+				log mv "${GWC_PATH}.new" "${GWC_PATH}"
+				mv "${GWC_PATH}.new" "${GWC_PATH}"
+				log Replaced.
+		else
+			log "${GWC_PATH}" is absent
+		fi
+	fi
+}
+
