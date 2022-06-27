@@ -189,7 +189,9 @@ if [[ "${TOMCAT_EXTRAS}" =~ [Tt][Rr][Uu][Ee] ]]; then
     rm -r /tmp/tomcat_apps
     if [[ ${POSTGRES_JNDI} =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
       cp /build_data/context.xml "${CATALINA_HOME}"/webapps/manager/META-INF/
-      sed -i -e '19,36d' "${CATALINA_HOME}"/webapps/manager/META-INF/context.xml
+      xml_tmp=$(mktemp)
+      | xmlstarlet ed -d "/Context/Resource" "${CATALINA_HOME}"/webapps/manager/META-INF/context.xml > "${xml_tmp}"
+      mv "${xml_tmp}" "${CATALINA_HOME}"/webapps/manager/META-INF/context.xml
     fi
     if [[ -z ${TOMCAT_PASSWORD} ]]; then
         generate_random_string 18
