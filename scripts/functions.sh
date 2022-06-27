@@ -109,6 +109,7 @@ function download_extension() {
   else
     echo -e "Plugin URL does not exist:: \e[1;31m ${URL}"
     echo -e "\033[0m "
+    exit 1
   fi
 
 }
